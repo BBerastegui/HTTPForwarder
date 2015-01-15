@@ -4,36 +4,32 @@ package main
 // - Flag to run in stdin - stdout mode
 
 import (
-	"bytes"
+	//	"bytes"
 	"fmt"
-	"io"
+	//	"io"
 	"net/http"
+	"encoding/json"
 )
 
-type Message struct {
-	Method  string
-	Headers []string
-	Body    string
-}
-
 type ReceivedRequest struct {
-	url    string
-	method string
-	data   string
+	Method string
+	Url string
+	Headers map[string]string
+	Data   string
 }
 
 type SentRequest struct {
-	headers []string
-	url     string
-	method  string
+	Method string
+	Url string
+	Headers map[string]string
 	data    string
 }
 
 type ReceivedResponse struct {
-	headers []string
-	url     string
-	method  string
-	data    string
+	Status int
+	Headers map[string]string
+	Method  string
+	Data    string
 }
 
 // The expected json to be received:
@@ -43,50 +39,71 @@ type ReceivedResponse struct {
 // Minimum values specified...
 
 func handler(w http.ResponseWriter, r *http.Request) {
+
+	decoder := json.NewDecoder(r.Body)
+
 	var rr ReceivedRequest
+	err := decoder.Decode(&rr)
 
-	// Save parameters on rr
-	rr.method = r.FormValue("method")
-	rr.url = r.FormValue("url")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
 
-	//	if rr.url == "" {
-	//		w.WriteHeader(http.StatusInternalServerError)
-	//		return
-	//	}
+	// Perform checks
+	// Minimum parameters
 
+	if (rr.Method == "" || rr.Url == "" || len(rr.Headers) == 0 || rr.Data == ""){
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println("Something is missing")
+		return
+	}
+
+	performRequest(rr)
+
+	if rr.Url == "" {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	/*
 	var b bytes.Buffer
 	_, err := io.Copy(&b, r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	//var m Message
-	//bbytes := b.Bytes()
-	//err2 := json.Unmarshal(b.Bytes, &m)
-	fmt.Println(b.Bytes)
-
-	if rr.method == "POST" {
-		fmt.Println("The method was post.")
-		rr.method = "POST"
-		var b bytes.Buffer
-		_, err := io.Copy(&b, r.Body)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		rr.data = b.String()
-		fmt.Println(rr.method)
-	} else {
-		fmt.Println("The method was not post. Defaulting to GET.")
-		rr.method = "GET"
-	}
-
-	fmt.Println(rr)
-
-	//fmt.Fprintf(w,"%s", m.method)
-	//fmt.Fprintf(w,"%s", m.headers)
+	*/
 }
 
+func performRequest(rr ReceivedRequest){
+	var st SentRequest
+	st.Headers = make(map[string]string)
+
+	//	Build response
+	for key, value := range rr.Headers {
+		fmt.Println("Key:", key, "Value:", value)
+		st.Headers[key] = "AAA"
+		fmt.Println(st.Headers[key])
+	}
+
+	if (rr.Method == "GET"){
+		resp, err := http.Get(rr.Url)
+		if err != nil {
+			fmt.Println("Ooops:",err)
+			return
+		}
+		fmt.Println(resp)
+	}
+}
+
+/*
+func sendRequest() {
+	resp, err := http.PostForm("http://example.com/form",
+	url.Values{"key": {"Value"}, "id": {"123"}})
+}
+*/
 func main() {
 	http.HandleFunc("/", handler)
 	http.ListenAndServe("localhost:8080", nil)
