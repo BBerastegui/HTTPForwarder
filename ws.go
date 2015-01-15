@@ -1,11 +1,20 @@
 package main
 
+// TODO
+// - Flag to run in stdin - stdout mode
+
 import (
 	"bytes"
 	"fmt"
 	"io"
 	"net/http"
 )
+
+type Message struct {
+	Method  string
+	Headers []string
+	Body    string
+}
 
 type ReceivedRequest struct {
 	url    string
@@ -27,6 +36,12 @@ type ReceivedResponse struct {
 	data    string
 }
 
+// The expected json to be received:
+// {method:"",headers:{"name":"value"},body:""}
+
+// Check for consistency of the request
+// Minimum values specified...
+
 func handler(w http.ResponseWriter, r *http.Request) {
 	var rr ReceivedRequest
 
@@ -34,16 +49,27 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	rr.method = r.FormValue("method")
 	rr.url = r.FormValue("url")
 
-	if rr.url == "" {
+	//	if rr.url == "" {
+	//		w.WriteHeader(http.StatusInternalServerError)
+	//		return
+	//	}
+
+	var b bytes.Buffer
+	_, err := io.Copy(&b, r.Body)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	//var m Message
+	//bbytes := b.Bytes()
+	//err2 := json.Unmarshal(b.Bytes, &m)
+	fmt.Println(b.Bytes)
 
 	if rr.method == "POST" {
 		fmt.Println("The method was post.")
 		rr.method = "POST"
 		var b bytes.Buffer
-		_, err := io.Copy(b, r.Body)
+		_, err := io.Copy(&b, r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
