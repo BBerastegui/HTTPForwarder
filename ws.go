@@ -4,9 +4,9 @@ package main
 // - Flag to run in stdin - stdout mode
 
 import (
-	//	"bytes"
+	"bytes"
 	"fmt"
-	//	"io"
+	"io/ioutil"
 	"net/http"
 	"encoding/json"
 )
@@ -84,18 +84,20 @@ func performRequest(rr ReceivedRequest){
 	//	Build response
 	for key, value := range rr.Headers {
 		fmt.Println("Key:", key, "Value:", value)
-		st.Headers[key] = "AAA"
+		st.Headers[key] = value
 		fmt.Println(st.Headers[key])
 	}
 
-	if (rr.Method == "GET"){
-		resp, err := http.Get(rr.Url)
-		if err != nil {
-			fmt.Println("Ooops:",err)
-			return
-		}
-		fmt.Println(resp)
+	req, err := http.NewRequest(rr.Method, rr.Url, bytes.NewBuffer([]byte(rr.Data)))
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
 	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
 }
 
 /*
