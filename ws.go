@@ -5,28 +5,28 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"encoding/json"
 )
 
 type ReceivedRequest struct {
-	Method string
-	Url string
+	Method  string
+	Url     string
 	Headers map[string]string
-	Data   string
+	Data    string
 }
 
 type SentRequest struct {
-	Method string
-	Url string
+	Method  string
+	Url     string
 	Headers map[string]string
 	data    string
 }
 
 type ReceivedResponse struct {
-	Status int
+	Status  int
 	Headers map[string]string
 	Method  string
 	Data    string
@@ -54,7 +54,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Perform checks
 	// Minimum parameters
 
-	if (rr.Method == "" || rr.Url == "" || len(rr.Headers) == 0 || rr.Data == ""){
+	if rr.Method == "POST" && rr.Data == "" {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Println("Something is missing")
 		return
@@ -68,16 +68,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	/*
-	var b bytes.Buffer
-	_, err := io.Copy(&b, r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+		var b bytes.Buffer
+		_, err := io.Copy(&b, r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	*/
 }
 
-func performRequest(rr ReceivedRequest){
+func performRequest(rr ReceivedRequest) {
 	var st SentRequest
 	st.Headers = make(map[string]string)
 
