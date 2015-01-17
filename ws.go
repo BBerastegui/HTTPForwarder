@@ -38,7 +38,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Create ReceivedRequest
 	var rreq ReceivedRequest
 	err := decoder.Decode(&rreq)
-
 	// Error on decoder
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -72,7 +71,8 @@ func performRequest(rreq ReceivedRequest) ReceivedResponse {
 
 	// Setup the request to the target
 	req, err := http.NewRequest(rreq.Method, rreq.Url, bytes.NewBuffer([]byte(rreq.Body)))
-
+	// Add the custom headers
+	req.Header = rreq.Header
 	client := &http.Client{}
 	// Perform request and store response on "resp"
 	resp, err := client.Do(req)
