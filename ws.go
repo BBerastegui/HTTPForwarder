@@ -1,8 +1,5 @@
 package main
 
-// TODO
-// - Flag to run in stdin - stdout mode
-
 import (
 	"bytes"
 	"encoding/json"
@@ -12,101 +9,96 @@ import (
 )
 
 type ReceivedRequest struct {
-	Method  string
-	Url     string
-	Headers map[string]string
-	Data    string
+	Method string
+	Url    string
+	Header map[string][]string
+	Body   string
 }
 
 type SentRequest struct {
-	Method  string
-	Url     string
-	Headers map[string]string
-	data    string
+	Method string
+	Url    string
+	Header map[string][]string
+	Body   string
 }
 
 type ReceivedResponse struct {
-	Status  int
-	Headers map[string]string
-	Method  string
-	Data    string
+	Status int
+	Header map[string][]string
+	Body   string
 }
 
-// The expected json to be received:
-// {method:"",headers:{"name":"value"},body:""}
-
+// TODO
 // Check for consistency of the request
 // Minimum values specified...
 
 func handler(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
+	// Create ReceivedRequest
+	var rreq ReceivedRequest
+	err := decoder.Decode(&rreq)
 
-	var rr ReceivedRequest
-	err := decoder.Decode(&rr)
-
+	// Error on decoder
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Println(err)
+		fmt.Println("[/!\\]Error in decoder:", err)
 		return
 	}
 
-	// Perform checks
-	// Minimum parameters
-
-	if rr.Method == "POST" && rr.Data == "" {
+	// Perform checks mandatory parameters
+	if rreq.Url == "" {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Println("Something is missing")
+		fmt.Println("[i]URL is missing on JSON structure.")
 		return
 	}
 
-	performRequest(rr)
+	// Perform the request to the target and store the received response
+	rresp := performRequest(rreq)
 
-	if rr.Url == "" {
+	// Create Encoder and set writer to write to (w)
+	encoder := json.NewEncoder(w)
+	// Encode received response and write to writer (w)
+	err = encoder.Encode(&rresp)
+	// Error in encoder
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println("[/!\\]Error in encoder:", err)
 		return
 	}
-
-	/*
-		var b bytes.Buffer
-		_, err := io.Copy(&b, r.Body)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	*/
 }
 
-func performRequest(rr ReceivedRequest) {
-	var st SentRequest
-	st.Headers = make(map[string]string)
+func performRequest(rreq ReceivedRequest) ReceivedResponse {
 
-	//	Build response
-	for key, value := range rr.Headers {
-		fmt.Println("Key:", key, "Value:", value)
-		st.Headers[key] = value
-		fmt.Println(st.Headers[key])
-	}
-
-	req, err := http.NewRequest(rr.Method, rr.Url, bytes.NewBuffer([]byte(rr.Data)))
+	// Setup the request to the target
+	req, err := http.NewRequest(rreq.Method, rreq.Url, bytes.NewBuffer([]byte(rreq.Body)))
 
 	client := &http.Client{}
+	// Perform request and store response on "resp"
 	resp, err := client.Do(req)
 	if err != nil {
 		panic(err)
 	}
 	defer resp.Body.Close()
 
+	// Handle response (resp) and store in ReceivedResponse (rresp)
+	var rresp ReceivedResponse
+
+	// Store HTTP Status code
+	rresp.Status = resp.StatusCode
+	// Store Headers
+	rresp.Header = resp.Header
+	// Store Body
 	body, _ := ioutil.ReadAll(resp.Body)
+	rresp.Body = string(body)
+
+	fmt.Println(rresp)
+	return rresp
 }
 
-/*
-func sendRequest() {
-	resp, err := http.PostForm("http://example.com/form",
-	url.Values{"key": {"Value"}, "id": {"123"}})
-}
-*/
 func main() {
+	var url = "localhost:8080"
+	fmt.Println("Running on:", url)
 	http.HandleFunc("/", handler)
-	http.ListenAndServe("localhost:8080", nil)
+	http.ListenAndServe(url, nil)
 }
