@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -41,14 +41,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Error on decoder
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Println("[/!\\]Error in decoder:", err)
+		log.Println("[/!\\]Error in decoder:", err)
 		return
 	}
 
 	// Perform checks mandatory parameters
 	if rreq.Url == "" {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Println("[i]URL is missing on JSON structure.")
+		log.Println("[i]URL is missing on JSON structure.")
 		return
 	}
 
@@ -62,7 +62,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Error in encoder
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Println("[/!\\]Error in encoder:", err)
+		log.Println("[/!\\]Error in encoder:", err)
 		return
 	}
 }
@@ -93,13 +93,13 @@ func performRequest(rreq ReceivedRequest) ReceivedResponse {
 	body, _ := ioutil.ReadAll(resp.Body)
 	rresp.Body = string(body)
 
-	fmt.Println(rresp)
+	log.Println(rresp)
 	return rresp
 }
 
 func main() {
 	var url = "localhost:8080"
-	fmt.Println("Running on:", url)
+	log.Println("Running on:", url)
 	http.HandleFunc("/", handler)
 	http.ListenAndServe(url, nil)
 }
