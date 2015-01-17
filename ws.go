@@ -53,7 +53,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Perform the request to the target and store the received response
-	rresp := performRequest(rreq)
+	rresp, err := performRequest(rreq)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Println("[/!\\]Error from performRequest():", err)
+		return
+	}
 
 	// Create Encoder and set writer to write to (w)
 	encoder := json.NewEncoder(w)
@@ -67,7 +72,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func performRequest(rreq ReceivedRequest) ReceivedResponse {
+func performRequest(rreq ReceivedRequest) (ReceivedResponse, error) {
+	var rresp ReceivedResponse
 
 	// Setup the request to the target
 	req, err := http.NewRequest(rreq.Method, rreq.Url, bytes.NewBuffer([]byte(rreq.Body)))
@@ -78,12 +84,11 @@ func performRequest(rreq ReceivedRequest) ReceivedResponse {
 	// Perform request and store response on "resp"
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return rresp, err
 	}
 	defer resp.Body.Close()
 
 	// Handle response (resp) and store in ReceivedResponse (rresp)
-	var rresp ReceivedResponse
 
 	// Store HTTP Status code
 	rresp.Status = resp.StatusCode
@@ -94,7 +99,7 @@ func performRequest(rreq ReceivedRequest) ReceivedResponse {
 	rresp.Body = string(body)
 
 	log.Println(rresp)
-	return rresp
+	return rresp, nil
 }
 
 func main() {
