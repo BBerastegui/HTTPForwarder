@@ -73,13 +73,6 @@ func performRequest(rreq ReceivedRequest) ReceivedResponse {
 	req, err := http.NewRequest(rreq.Method, rreq.Url, bytes.NewBuffer([]byte(rreq.Body)))
 	// Add the custom headers
 	req.Header = rreq.Header
-	// Check if duplicate headers (on purpose)
-	for key, value := range rreq.Header {
-		if len(rreq.Header[key]) > 1 {
-			fmt.Println("[TODO] Duplicate headers... ", rreq.Header[key])
-		}
-		fmt.Println("Key:", key, "Value:", value)
-	}
 
 	client := &http.Client{}
 	// Perform request and store response on "resp"
