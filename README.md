@@ -12,7 +12,7 @@ The idea is to run the server, and send all your HTTP requests from JavaScript t
 
 The request has to be sent to the server in the following JSON format:
 
-{"URL":"https://github.com/BBerastegui/","Method":"POST","Header":{"HeaderA":["ValueA"],"HeaderB":"ValueB"},"Body":"id=1&page=2"}
+{"URL":"https://github.com/BBerastegui/","Method":"POST","Header":{"HeaderA":["ValueA"],"HeaderB":["ValueB"]},"Body":"id=1&page=2"}
 
 The server will perform the request for you and return the following JSON structure with the response:
 
