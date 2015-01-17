@@ -16,4 +16,4 @@ The request has to be sent to the server in the following JSON format:
 
 The server will perform the request for you and return the following JSON structure with the response:
 
-{"Status":"200","Header":{"HeaderA":["ValueA"],"HeaderB":"ValueB"},"Body":"<html>HTMLCONTENT</html>"}
+{"Status":"200","Header":{"HeaderA":["ValueA"],"HeaderB":["ValueB"]},"Body":"<html>HTMLCONTENT</html>"}
