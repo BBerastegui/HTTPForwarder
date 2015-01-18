@@ -33,6 +33,8 @@ type ReceivedResponse struct {
 // Minimum values specified...
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	// Allow requesting from everywhere
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	decoder := json.NewDecoder(r.Body)
 	// Create ReceivedRequest
